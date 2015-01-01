@@ -1,0 +1,171 @@
+<!-- 
+*
+* Author: Phuc Vo
+*
+-->
+<project name="vntp-math" default="deploy.cmd" basedir=".">
+    <!-- =================================================================== -->
+    <!-- Properties                                                          -->
+    <!-- =================================================================== -->
+    <property environment="env"/>
+    
+    <property name="app.name" value="vntp-math"/>
+    <property name="app.version" value="00.01"/>
+    
+    <property name="lib" value="lib"/>
+    <property name="conf" value="conf"/>
+    <property name="docs" value="docs"/>
+    <property name="scripts" value="scripts"/>
+
+    <property name="src" value="src"/>
+    <property name="src.java" value="${src}/java"/>
+    
+    <property name="build" value="build"/>
+    <property name="build.classes" value="${build}/classes"/>
+    
+    <property name="javadoc" value="javadoc"/>
+
+    <!-- General distribution location -->
+    <property name="dist" value="dist"/>
+    <property name="dist.lib" value="${dist}/lib"/>
+
+    <!-- General deployment location -->
+    <property name="deploy" value="deploy"/>
+    <property name="deploy.lib" value="${deploy}/lib"/>
+
+    <!-- =================================================================== -->
+    <!-- Default Targets                                                     -->
+    <!-- =================================================================== -->
+    <!-- main project setup -->
+    <target name="init">
+        <mkdir dir="${build}"/>
+        <mkdir dir="${build.classes}"/>
+        
+        <mkdir dir="${dist}"/>
+        <mkdir dir="${dist.lib}"/>
+        
+        <mkdir dir="${deploy}"/>
+        
+        <mkdir dir="${javadoc}"/>
+    </target>
+    
+    <!-- clean target -->
+    <target name="clean.all" description="Clean">
+        <delete dir="${build}"/>
+        
+        <antcall target="clean.dist"/>
+        <antcall target="clean.deploy"/>
+        <antcall target="clean.javadoc"/>
+    </target>
+    
+    <!-- clean.dist target -->
+    <target name="clean.dist">
+        <delete dir="${dist}"/>
+    </target>
+
+    <!-- clean.deploy target -->
+    <target name="clean.deploy">
+        <delete dir="${deploy}"/>
+    </target>
+
+    <!-- clean.javadoc target -->
+    <target name="clean.javadoc">
+        <delete dir="${javadoc}"/>
+    </target>
+
+    <!-- compile.java target -->
+    <target name="compile.java">
+        <javac srcdir="${src.java}" 
+            destdir="${build.classes}"
+            verbose="false"
+            debug="true"
+            deprecation="true"
+            includeAntRuntime="false">
+            
+            <classpath>
+                <pathelement path="${classpath}"/>
+                
+                <fileset dir="${lib}">
+                    <include name="**/*.jar"/>
+                    <include name="**/*.zip"/>
+                </fileset>
+                
+                <pathelement location="${lib}"/>
+                <pathelement location="classes"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <!-- compile and build a JAR file -->
+    <target name="jar">
+        <antcall target="init"/>
+        <antcall target="compile.java"/>
+        
+        <jar jarfile="${dist.lib}/${ant.project.name}.jar"
+            basedir="${build.classes}"
+            includes="**/*.class"/>
+    </target>
+    
+    <!-- third party libraries (combine jar files) -->
+    <target name="jar.libs">
+        <jar jarfile="${dist.lib}/${ant.project.name}_libs.jar">
+            <zipgroupfileset dir="${lib}">
+                <include name="**/*.jar" />
+            </zipgroupfileset>
+        </jar>
+    </target>
+
+    <!-- javadoc -->
+    <target name="javadoc">
+        <antcall target="clean.javadoc"/>
+        
+        <javadoc sourcepath="${src.java}" 
+            destdir="${javadoc}"
+            packagenames="vntp.math.*"
+            defaultexcludes="yes"
+            author="true"
+            version="true"
+            use="true"
+            windowtitle="vntp-math API"
+            bottom="&#169; 2015 All Rights Reserved"
+        >
+            <classpath>
+                <pathelement path="${classpath}"/>
+                <fileset dir="lib">
+                    <include name="**/*.jar"/>
+                    <include name="**/*.zip"/>
+                </fileset>
+                
+                <pathelement location="${build.classes}"/>
+            </classpath>
+            <doctitle><![CDATA[<h1>vntp-math API</h1>]]></doctitle>
+        </javadoc>
+    </target>
+
+    <!-- =================================================================== -->
+    <!-- Command-line                                                        -->
+    <!-- =================================================================== -->
+    <target name="deploy.cmd" depends="dist"
+        description="Creates command-line apps for deployment"
+    >
+
+        <mkdir dir="${deploy.lib}"/>
+        
+        <copy todir="${deploy.lib}" >
+            <fileset dir="${dist.lib}">
+                <include name="**/*.jar" />
+            </fileset>
+        </copy>
+        
+        <copy todir="${deploy}" >
+             <fileset dir="${conf}"/>
+             <fileset dir="${scripts}"/>
+        </copy>
+    </target>
+    
+    <target name="dist">
+        <antcall target="jar"/>
+        <antcall target="jar.libs"/>
+    </target>
+       
+</project>
